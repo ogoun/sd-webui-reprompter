@@ -13,6 +13,10 @@ sys_prompt_file_path = os.path.join(scripts.basedir(), 'sys_prompt.txt')
 with open(sys_prompt_file_path, 'r', encoding='UTF-8') as sys_prompt_file:
     sys_prompt = sys_prompt_file.read()
 
+translate_sys_prompt_file_path = os.path.join(scripts.basedir(), 'translate_sys_prompt.txt')
+with open(translate_sys_prompt_file_path, 'r', encoding='UTF-8') as translate_sys_prompt_file:
+    translate_sys_prompt = translate_sys_prompt_file.read()
+
 class RemprompterScript(scripts.Script):
     def __init__(self) -> None:
         super().__init__()
@@ -37,10 +41,12 @@ class RemprompterScript(scripts.Script):
                 api_key=self.reprompter_ollama_key,
             )
 
+            query_sys_prompt = sys_prompt if self.reprompter_use_positive_improvements else translate_sys_prompt
+
             request_content = [
             {
                 'role': 'system',
-                'content': sys_prompt,
+                'content': query_sys_prompt,
             },
             {
                 'role': 'user',

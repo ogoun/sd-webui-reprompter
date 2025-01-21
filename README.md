@@ -1,5 +1,5 @@
 # sd-webui-reprompter
-Translates and augments text to create a prompt.
+Translates and augments text to create a prompt using ollama api. (Perhaps other api's will be added as well)
 
 In the txt2img and img2img tabs, a tab appears in the accordion with the name Remprompter. 
 In the tab there will be a text field where you can enter a description of the picture in any language. 

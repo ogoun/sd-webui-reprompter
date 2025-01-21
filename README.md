@@ -18,3 +18,9 @@ On the settings page, on the Reprompter tab you can find the following settings:
 - Utilize positive improvements - when this flag is set, the system prompt is used to append the specified text. When the flag is unchecked, there will only be a translation.
 
 ![Reprompter settings](https://github.com/ogoun/ogoun/blob/main/images/reprompter/settings.png)
+
+
+#### Plans
+1. Add support for other APIs.
+2. Move checkboxes from settings to the main tab.
+3. Finalize the use of query context.

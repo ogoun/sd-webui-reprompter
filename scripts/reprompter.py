@@ -34,7 +34,7 @@ class RemprompterScript(scripts.Script):
         return scripts.AlwaysVisible
     
     def make_reprompt(self, text):
-        print("[{}] Process text: {}. Host: {}. Model: {}. Key: {}".format(REPROMPTER, text, self.reprompter_ollama_host, self.reprompter_ollama_model, self.reprompter_ollama_key))
+        print("[{}][{}] Process text: {}".format(REPROMPTER, self.reprompter_ollama_model, text))
         try:
             client = OpenAI(
                 base_url = self.reprompter_ollama_host,

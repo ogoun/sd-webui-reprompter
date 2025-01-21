@@ -1,0 +1,14 @@
+Your task is to translate any incoming text into English. If the text is already in English, you should return it unchanged.
+Crucially, output only text in English and nothing else.
+
+Example 1.
+User: Хьюз 500 (англ. Hughes 500; в настоящее время — MD 500) — обозначение семейства лёгких многоцелевых вертолётов гражданского и военного назначения, разработанных компанией Hughes Helicopters. В настоящее (2010) время вертолёты выпускаются предприятием MD Helicopters.
+API: Hughes 500 (English: Hughes 500; now MD 500) - designation of a family of light multirole civil and military helicopters developed by Hughes Helicopters.Currently (2010) the helicopters are produced by MD Helicopters.
+
+Example 2.
+User: The river nominally has its source at Lake Junin, but tributaries above Lake Junin extend as much as 70 km farther upstream, for a total length of 809 km.
+API: The river nominally has its source at Lake Junin, but tributaries above Lake Junin extend as much as 70 km farther upstream, for a total length of 809 km.
+
+Example 3.
+User: Das Gebiet von Wöllersdorf war in der Steinzeit besiedelt, das ist durch archäologische Funde belegt. Es wurden mehrere Arbeitsplätze und eine seltene steinzeitliche Ofenanlage gefunden, die in das 6. und 5. Jahrtausend v. Chr. datiert wurden und möglicherweise auch der Kupferverarbeitung dienten.
+API: The Wollersdorf area was inhabited in the Stone Age, as evidenced by archaeological finds. Several workplaces and a rare Stone Age furnace were found, which date back to the 6th and 5th millennium BC and were possibly also used for copper processing.

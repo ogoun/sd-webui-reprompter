@@ -91,29 +91,43 @@ class RemprompterScript(scripts.Script):
             print("[{}] Error call openai api: {}".format(REPROMPTER, repr(e)))
         return text    
     
-    def __update_use_context(self, checkbox):
-        self.prompt.use_context(checkbox)
+    def __update_use_context(self, enable):
+        # print('[{}] Use context: {}'.format(REPROMPTER, enable))
+        self.prompt.use_context(enable)
 
-    def __update_use_improvement(self, checkbox):
-        self.prompt.use_improvement(checkbox)
+    def __update_use_improvement(self, enable):
+        # print('[{}] Use improvement: {}'.format(REPROMPTER, enable))
+        self.prompt.use_improvement(enable)
+
+    def __update_parameters(self, checkboxGroup):
+        use_context = False
+        use_improvement = False
+        for p in checkboxGroup:
+            if "context" in p:
+                use_context = True
+            if "improvement" in p:
+                use_improvement = True
+        self.__update_use_context(use_context)
+        self.__update_use_improvement(use_improvement)
 
     def ui(self, is_img2img):
         with gr.Group():
-            with gr.Accordion(REPROMPTER, open=False):
+            with gr.Accordion(REPROMPTER, open=False):                
                 text_to_reprompt = gr.Textbox(label="Prompt description, any language")
-                checkbox_use_context =  gr.Checkbox(label="Use context")
-                checkbox_use_improvement =  gr.Checkbox(label="Use improvement", value=True,visible=True,)
+                gr.HTML("<br style='margin-top: 10px;'>")
+                parameters = gr.CheckboxGroup(["Use context", "Use improvement"], label="Query parameters")
+                gr.HTML("<br style='margin-top: 20px;'>")
                 send_text_button = gr.Button(value='Reprompt', variant='primary')
-        
+       
         with contextlib.suppress(AttributeError):  # Ignore the error if the attribute is not present
-            checkbox_use_context.change(fn=self.__update_use_context, inputs=[checkbox_use_context])
-            checkbox_use_improvement.change(fn=self.__update_use_improvement, inputs=[checkbox_use_improvement])
+            parameters.change(fn=self.__update_parameters, inputs=[parameters])
+            
             if is_img2img:
                 send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt], outputs=[self.img2img])
             else:
-                send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt], outputs=[self.text2img])                
+                send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt], outputs=[self.text2img])
 
-        return [text_to_reprompt, checkbox_use_context, send_text_button]
+        return [text_to_reprompt, parameters, send_text_button]
 
     def on_ui_settings():
         section = ("reprompter", REPROMPTER)

@@ -64,32 +64,33 @@ class PromptBuilder():
 
         self.use_improvements_enabled = enable
 
-    def reprompt(self, text):
+    def reprompt(self, prefix, text, postfix):
         """Creating a promt. If the service is unavailable from the LLM, the input text will be returned."""
 
         if not self.use_context_enabled:
             self.reset_context()
 
-        self.content.append({ 'role': 'user', 'content': text, })
+        self.content.append({ 'role': 'user', 'content': text })
 
         responce = self.llm_provider.call_llm(self.content)
 
         if responce is not None:
             if self.use_context_enabled:
-                self.content.append({ 'role': 'assistant', 'content': responce, })
-            return responce
+                self.content.append({ 'role': 'assistant', 'content': responce })
+            return prefix + responce + postfix
 
-        return text
+        return prefix + text + postfix
 
     def reset_context(self):
         """Resetting the LLM context."""
 
         self.content = []
+        
         # append system prompt
         if self.use_improvements_enabled:
-            self.content.append({ 'role': 'system', 'content': self.sys_prompt, })
+            self.content.append({ 'role': 'system', 'content': self.sys_prompt })
         else:
-            self.content.append({ 'role': 'system', 'content': self.translate_sys_prompt, })
+            self.content.append({ 'role': 'system', 'content': self.translate_sys_prompt })
 
 class RemprompterScript(scripts.Script):
     """A `RemprompterScript` main extension script for WebUI."""
@@ -120,15 +121,19 @@ class RemprompterScript(scripts.Script):
 
     def show(self, is_img2img): return scripts.AlwaysVisible
     
-    def make_reprompt(self, text): 
+    def make_reprompt(self, text, prefix, postfix): 
         print("[{}][{}] Process text: {}".format(REPROMPTER, self.reprompter_openai_model, text))
-        return self.prompt.reprompt(text)
+        return self.prompt.reprompt(prefix, text, postfix)
 
     def ui(self, is_img2img):
 
         choices = ["Use context", "Use improvement"]
         with gr.Group():
             with gr.Accordion(REPROMPTER, open=False):                
+                prompt_prefix = gr.Textbox(label="Prompt prefix")
+                gr.HTML("<br style='margin-top: 10px;'>")
+                prompt_postfix = gr.Textbox(label="Prompt postfix")
+                gr.HTML("<br style='margin-top: 10px;'>")
                 text_to_reprompt = gr.Textbox(label="Prompt description, any language")
                 gr.HTML("<br style='margin-top: 10px;'>")
                 parameters = gr.CheckboxGroup(choices=choices, label="Query parameters", interactive=True, value=[choices[1]])
@@ -137,13 +142,12 @@ class RemprompterScript(scripts.Script):
        
         with contextlib.suppress(AttributeError):  # Ignore the error if the attribute is not present
             parameters.change(fn=self.__update_parameters, inputs=[parameters])
-            
             if is_img2img:
-                send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt], outputs=[self.img2img])
+                send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt, prompt_prefix, prompt_postfix], outputs=[self.img2img])
             else:
-                send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt], outputs=[self.text2img])
+                send_text_button.click(fn=self.make_reprompt, inputs=[text_to_reprompt, prompt_prefix, prompt_postfix], outputs=[self.text2img])
 
-        return [text_to_reprompt, parameters, send_text_button]
+        return [prompt_prefix, prompt_postfix, text_to_reprompt, parameters, send_text_button]
 
     def on_ui_settings():
         section = ("reprompter", REPROMPTER)

@@ -1,4 +1,5 @@
 import os
+import json
 import contextlib
 import gradio as gr
 
@@ -8,6 +9,28 @@ from modules.shared import opts, state
 
 REPROMPTER = "Remprompter"
 BASE_DIR = scripts.basedir()
+
+LAST_STATE_FILE_NAME = "last_state.json"
+LAST_STATE_FILE_PATH = os.path.join(BASE_DIR, LAST_STATE_FILE_NAME)
+
+def write_json_to_file(json_data, file_path: str):
+    try:
+        with open(file_path, "w") as file:
+            file.write(json.dumps(json_data, indent=4))
+
+    except Exception as e: 
+        print("[{}] Error write to file: {}. {}.".format(REPROMPTER, file_path, repr(e)))
+
+def load_json_to_file(file_path: str):
+    data = None
+    try:
+        with open(file_path) as file:
+            data = json.load(file)
+
+    except Exception as e:
+        print("[{}] Error load from to file: {}. {}.".format(REPROMPTER, file_path, repr(e)))
+    
+    return data
 
 class LLMOpenAIProvider():
     """A `LLMOpenAIProvider` is OpenAI API connector."""
@@ -66,20 +89,34 @@ class PromptBuilder():
 
     def reprompt(self, prefix, text, postfix):
         """Creating a promt. If the service is unavailable from the LLM, the input text will be returned."""
+        print("[{}] REPROMPT OPTIONS: Context: {}. Improvement: {}".format(REPROMPTER, self.use_context_enabled, self.use_improvements_enabled))
 
         if not self.use_context_enabled:
             self.reset_context()
 
-        self.content.append({ 'role': 'user', 'content': text })
+        self.content.append({ 'role': 'user', 'content': text })        
+
+        print("[{}] REPROMPT CONTENT: {}".format(REPROMPTER, self.content))
 
         responce = self.llm_provider.call_llm(self.content)
+
+        prompt = text
 
         if responce is not None:
             if self.use_context_enabled:
                 self.content.append({ 'role': 'assistant', 'content': responce })
-            return prefix + responce + postfix
+            prompt = responce
 
-        return prefix + text + postfix
+        last_state = {
+            "prefix": prefix,
+            "postfix": postfix,
+            "text": text,
+            "prompt": prefix + prompt + postfix
+        }
+
+        write_json_to_file(last_state, LAST_STATE_FILE_PATH)
+
+        return prefix + prompt + postfix
 
     def reset_context(self):
         """Resetting the LLM context."""
@@ -128,15 +165,24 @@ class RemprompterScript(scripts.Script):
     def ui(self, is_img2img):
 
         choices = ["Use context", "Use improvement"]
+        state = load_json_to_file(LAST_STATE_FILE_PATH)
+        print("[{}] State: {}".format(REPROMPTER, state))
         with gr.Group():
             with gr.Accordion(REPROMPTER, open=False):                
-                prompt_prefix = gr.Textbox(label="Prompt prefix")
+
+                prompt_prefix = gr.Textbox(value = lambda: state["prefix"])
+                prompt_prefix.label = "Prompt prefix"
                 gr.HTML("<br style='margin-top: 10px;'>")
-                prompt_postfix = gr.Textbox(label="Prompt postfix")
+
+                prompt_postfix = gr.Textbox(value = lambda: state["postfix"])
+                prompt_postfix.label = "Prompt postfix"
                 gr.HTML("<br style='margin-top: 10px;'>")
-                text_to_reprompt = gr.Textbox(label="Prompt description, any language")
+
+                text_to_reprompt = gr.Textbox(value = lambda: state["text"])
+                text_to_reprompt.label = "Prompt description, any language"
                 gr.HTML("<br style='margin-top: 10px;'>")
-                parameters = gr.CheckboxGroup(choices=choices, label="Query parameters", interactive=True, value=[choices[1]])
+
+                parameters = gr.CheckboxGroup(choices=choices, label="Query parameters", interactive = True, value = lambda: [choices[1]])
                 gr.HTML("<br style='margin-top: 20px;'>")
                 send_text_button = gr.Button(value='Reprompt', variant='primary')
        

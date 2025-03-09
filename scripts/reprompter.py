@@ -30,6 +30,22 @@ def load_json_to_file(file_path: str):
     except Exception as e:
         print("[{}] Error load from to file: {}. {}.".format(REPROMPTER, file_path, repr(e)))
     
+    if data is None:
+        data = {
+            "prefix": "",
+            "postfix": "",
+            "text": "",
+            "prompt": ""
+        }
+    if "prefix" not in data:
+        data["prefix"] = ""
+    if "postfix" not in data:
+        data["postfix"] = ""
+    if "text" not in data:
+        data["text"] = ""
+    if "prompt" not in data:
+        data["prompt"] = ""
+
     return data
 
 class LLMOpenAIProvider():
